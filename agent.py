@@ -36,8 +36,8 @@ LOG = logging.getLogger("dk-ops-agent")
 # Config
 # ---------------------------------------------------------------------------
 
-MCP_BASE_URL = os.getenv("MCP_BASE_URL", "https://dk-infraedge-mcp.home.arpa")
-MCP_AUTH_TOKEN = os.getenv("MCP_AUTH_TOKEN", "***REMOVED-CREDENTIAL***")
+MCP_BASE_URL = os.getenv("MCP_BASE_URL", "https://dk-infraedge-mcp.example.internal")
+MCP_AUTH_TOKEN = os.getenv("MCP_AUTH_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "")  # optional

@@ -17,7 +17,7 @@ spec:
               command: ["python3", "agent.py", "--mode", "daily-briefing", "-v"]
               env:
                 - name: MCP_BASE_URL
-                  value: "https://dk-infraedge-mcp.home.arpa"
+                  value: "https://dk-infraedge-mcp.example.internal"
                 - name: MCP_AUTH_TOKEN
                   valueFrom:
                     secretKeyRef:

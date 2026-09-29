@@ -12,13 +12,13 @@ cd ~/dk-ops-agent
 pip install httpx --break-system-packages
 
 # Quick test — pipeline check only (no OpenAI needed)
-MCP_BASE_URL=https://dk-infraedge-mcp.home.arpa \
-MCP_AUTH_TOKEN=***REMOVED-CREDENTIAL*** \
+MCP_BASE_URL=https://dk-infraedge-mcp.example.internal \
+MCP_AUTH_TOKEN="$MCP_AUTH_TOKEN" \
 python3 agent.py --mode pipeline-check -v
 
 # Full report with AI recommendations
-MCP_BASE_URL=https://dk-infraedge-mcp.home.arpa \
-MCP_AUTH_TOKEN=***REMOVED-CREDENTIAL*** \
+MCP_BASE_URL=https://dk-infraedge-mcp.example.internal \
+MCP_AUTH_TOKEN="$MCP_AUTH_TOKEN" \
 OPENAI_API_KEY=$(kubectl -n logsight get secret logsight-secrets -o jsonpath='{.data.OPENAI_API_KEY}' | base64 -d) \
 python3 agent.py --mode full-report --output /tmp/ops-report.md -v
 
@@ -28,7 +28,7 @@ cat /tmp/ops-report.md
 ### 2. Create k8s secret
 ```bash
 kubectl -n logsight create secret generic dk-ops-agent-secrets \
-  --from-literal=MCP_AUTH_TOKEN=***REMOVED-CREDENTIAL*** \
+  --from-literal=MCP_AUTH_TOKEN="$MCP_AUTH_TOKEN" \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
