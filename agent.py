@@ -43,6 +43,44 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "")  # optional
 
 
+
+# ---------------------------------------------------------------------------
+# Startup validation
+# ---------------------------------------------------------------------------
+
+def require_config() -> None:
+    """Validate required configuration before any work begins.
+
+    MCP_AUTH_TOKEN no longer has a default. Until 2026-09-29 it defaulted to a
+    real credential that was committed to this public repo, so the agent ran
+    happily even when the env var was never set -- which is exactly why the
+    leak went unnoticed for six months.
+
+    This runs as a Kubernetes CronJob: schedule "0 7 * * 1-5" (7 AM CT,
+    Mon-Fri) with restartPolicy: OnFailure. So the failure mode matters:
+    a non-zero exit is retried and shows up as a visible pod failure, while a
+    partial success looks like a normal run that just happened to say less.
+
+    Decision (2026-10-03): fail fast. A missing credential exits non-zero
+    before any work or any OpenAI spend, so OnFailure retries it and the pod
+    lands in a visible failure state. The degraded alternative was rejected
+    because a briefing missing its Notion sections is indistinguishable from a
+    quiet business day, which is the same silence that hid the leak.
+    OPENAI_API_KEY is treated as degradable: the data sections still stand
+    without the AI commentary.
+    """
+    missing = [n for n, v in (("MCP_AUTH_TOKEN", MCP_AUTH_TOKEN),
+                              ("MCP_BASE_URL", MCP_BASE_URL)) if not v]
+    if missing:
+        raise SystemExit(
+            f"refusing to start: {', '.join(missing)} not set. "
+            "This agent has no credential default by design: one used to be "
+            "hardcoded here and leaked publicly. Set it via the CronJob's "
+            "secret (k8s/cronjob.yaml) or a local .env (see .env.example)."
+        )
+    if not OPENAI_API_KEY:
+        LOG.warning("OPENAI_API_KEY not set - briefings will omit AI recommendations")
+
 # ---------------------------------------------------------------------------
 # MCP Client — calls DK InfraEdge MCP tools
 # ---------------------------------------------------------------------------
@@ -391,6 +429,8 @@ def main():
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
+
+    require_config()
 
     mcp = MCPClient(MCP_BASE_URL, MCP_AUTH_TOKEN)
     advisor = AIAdvisor(OPENAI_API_KEY, OPENAI_MODEL)
